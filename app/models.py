@@ -9,32 +9,37 @@ SHAPES = [
 ]
 
 
-class Cavity(db.Model):
+class Piece(db.Model):
+    __tablename__ = 'piece'
     id = db.Column(db.Integer, primary_key=True)
-    matriz_id = db.Column(db.Integer,
-                          db.ForeignKey('matrix.id'),
-                          nullable=False)
-    nombre = db.Column(db.String(120), nullable=False)
-    pieza_id = db.Column(db.Integer,
-                         db.ForeignKey('piece.id'),
-                         nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    weight_grs = db.Column(db.Float, nullable=False)
+    shape = db.Column(db.String(50), nullable=False)
+    cavities = db.relationship('Cavity', backref='piece', lazy=True)
+
+    def __init__(self, name, weight_grs, shape):
+        self.name = name
+        self.weight_grs = weight_grs
+        if shape not in SHAPES:
+            raise ValueError(f"the shape {shape} is invalid.")
+        self.shape = shape
 
 
 class MeasuresMatrix(db.Model):
+    __tablename__ = 'measuresmatrix'
     id = db.Column(db.Integer, primary_key=True)
     width_cm = db.Column(db.Integer, nullable=False)
     height_cm = db.Column(db.Integer, nullable=False)
-    measuresmatrix = db.relationship('Matrix',
-                                     backref='measuresmatrix',
-                                     lazy=True)
+    matrices = db.relationship('Matrix', backref='measuresmatrix', lazy=True)
 
 
 class Matrix(db.Model):
+    __tablename__ = 'matrix'
     id = db.Column(db.Integer, primary_key=True)
     identifier = db.Column(db.String(5), nullable=False)
-    measuresmatrix = db.Column(db.Integer,
-                                db.ForeignKey('measuresmatrix.id'),
-                                nullable=False)
+    measuresmatrix_id = db.Column(db.Integer,
+                                  db.ForeignKey('measuresmatrix.id'),
+                                  nullable=False)
     name = db.Column(db.String(120), nullable=False)
     weight_unit_grs = db.Column(db.Float, nullable=False)
     with_move = db.Column(db.Boolean, default=False)
@@ -42,7 +47,20 @@ class Matrix(db.Model):
     cavities = db.relationship('Cavity', backref='matrix', lazy=True)
 
 
+class Cavity(db.Model):
+    __tablename__ = 'cavity'
+    id = db.Column(db.Integer, primary_key=True)
+    matrix_id = db.Column(db.Integer,
+                          db.ForeignKey('matrix.id'),
+                          nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    piece_id = db.Column(db.Integer,
+                         db.ForeignKey('piece.id'),
+                         nullable=False)
+
+
 class Holder(db.Model):
+    __tablename__ = 'holder'
     id = db.Column(db.Integer, primary_key=True)
     identifier = db.Column(db.String(5), nullable=False)
     width_cm = db.Column(db.Integer, nullable=False)
@@ -53,21 +71,7 @@ class Holder(db.Model):
 
 
 class Machine(db.Model):
+    __tablename__ = 'machine'
     id = db.Column(db.Integer, primary_key=True)
     brand_machine = db.Column(db.String(120), nullable=False)
     ton = db.Column(db.Integer, nullable=False)
-
-
-class Piece(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    weight_grs = db.Column(db.Float, nullable=False)
-    shape = db.Column(db.String(50), nullable=False)
-    cavities = db.relationship('Cavity', backref='piece', lazy=True)
-
-    def __init__(self, name, weight_grs, shape):
-        self.weight_grs = weight_grs
-        self.name = name
-        if shape not in SHAPES:
-            raise ValueError(f"the shape {shape} is invalid.")
-        self.shape = shape
