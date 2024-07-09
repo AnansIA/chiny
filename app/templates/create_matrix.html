@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Matrix</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Create Matrix</h1>
+        <form method="POST" action="{{ url_for('create_matrix') }}">
+            <div class="mb-3">
+                <label for="width_cm" class="form-label">Width (cm):</label>
+                <input type="number" class="form-control" id="width_cm" name="width_cm" required>
+            </div>
+            <div class="mb-3">
+                <label for="height_cm" class="form-label">Height (cm):</label>
+                <input type="number" class="form-control" id="height_cm" name="height_cm" required>
+            </div>
+            <div class="mb-3">
+                <label for="identifier" class="form-label">Matrix Identifier:</label>
+                <input type="text" class="form-control" id="identifier" name="identifier" required>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Matrix Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="weight_unit_grs" class="form-label">Weight per Unit (grs):</label>
+                <input type="number" step="0.01" class="form-control" id="weight_unit_grs" name="weight_unit_grs" required>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="with_move" name="with_move">
+                <label class="form-check-label" for="with_move">With Move</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="is_combinable" name="is_combinable" checked>
+                <label class="form-check-label" for="is_combinable">Is Combinable</label>
+            </div>
+            <div class="mb-3">
+                <label for="cavities" class="form-label">Number of Cavities:</label>
+                <input type="number" class="form-control" id="cavities" name="cavities" required>
+            </div>
+
+            <div id="cavity-details">
+                <!-- Placeholder for dynamic cavity creation -->
+            </div>
+            
+            <button type="button" class="btn btn-secondary" onclick="addCavityDetails()">Add Cavities Details</button><br><br>
+            <input type="submit" class="btn btn-primary" value="Create Matrix">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        function addCavityDetails() {
+            const numberOfCavities = document.getElementById('cavities').value;
+            const cavityDetailsDiv = document.getElementById('cavity-details');
+            cavityDetailsDiv.innerHTML = '';
+
+            for (let i = 1; i <= numberOfCavities; i++) {
+                cavityDetailsDiv.innerHTML += `
+                    <h3>Cavity ${i}</h3>
+                    <div class="mb-3">
+                        <label for="cavity_name_${i}" class="form-label">Cavity Name:</label>
+                        <input type="text" class="form-control" id="cavity_name_${i}" name="cavity_name_${i}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="piece_name_${i}" class="form-label">Piece Name:</label>
+                        <input type="text" class="form-control" id="piece_name_${i}" name="piece_name_${i}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="piece_weight_${i}" class="form-label">Piece Weight (grs):</label>
+                        <input type="number" step="0.01" class="form-control" id="piece_weight_${i}" name="piece_weight_${i}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="piece_shape_${i}" class="form-label">Piece Shape:</label>
+                        <select class="form-control" id="piece_shape_${i}" name="piece_shape_${i}" required>
+                            {% for shape in shapes %}
+                                <option value="{{ shape }}">{{ shape }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+
