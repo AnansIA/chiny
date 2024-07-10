@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>List of Matrices</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">List of Matrices</h1>
+        {% for matrix in matrices %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Matrix {{ matrix.identifier }} - {{ matrix.name }}</h5>
+                    <p class="card-text"><strong>Dimensions:</strong> {{ matrix.width_cm }} cm x {{ matrix.height_cm }} cm</p>
+                    <p class="card-text"><strong>Weight per Unit:</strong> {{ matrix.weight_unit_grs }} grs</p>
+                    <p class="card-text"><strong>With Move:</strong> {{ 'Yes' if matrix.with_move else 'No' }}</p>
+                    <p class="card-text"><strong>Is Combinable:</strong> {{ 'Yes' if matrix.is_combinable else 'No' }}</p>
+                    <h6>Cavities:</h6>
+                    <ul class="list-group">
+                        {% for cavity in matrix.cavities %}
+                            <li class="list-group-item">
+                                <strong>{{ cavity.cavity_name }}</strong>:
+                                Piece: {{ cavity.piece_name }},
+                                Weight: {{ cavity.piece_weight }} grs,
+                                Shape: {{ cavity.piece_shape }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

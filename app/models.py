@@ -28,8 +28,8 @@ class Piece(db.Model):
 class MeasuresMatrix(db.Model):
     __tablename__ = 'measuresmatrix'
     id = db.Column(db.Integer, primary_key=True)
-    width_cm = db.Column(db.Integer, nullable=False)
-    height_cm = db.Column(db.Integer, nullable=False)
+    width_mm = db.Column(db.Integer, nullable=False)
+    height_mm = db.Column(db.Integer, nullable=False)
     matrices = db.relationship('Matrix', backref='measuresmatrix', lazy=True)
 
 
