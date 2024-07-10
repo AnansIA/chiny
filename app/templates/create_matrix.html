@@ -11,12 +11,12 @@
         <h1 class="mt-5">Create Matrix</h1>
         <form method="POST" action="{{ url_for('create_matrix') }}">
             <div class="mb-3">
-                <label for="width_cm" class="form-label">Width (cm):</label>
-                <input type="number" class="form-control" id="width_cm" name="width_cm" required>
+                <label for="width_mm" class="form-label">Width (mm):</label>
+                <input type="number" class="form-control" id="width_mm" name="width_mm" required>
             </div>
             <div class="mb-3">
-                <label for="height_cm" class="form-label">Height (cm):</label>
-                <input type="number" class="form-control" id="height_cm" name="height_cm" required>
+                <label for="height_mm" class="form-label">Height (mm):</label>
+                <input type="number" class="form-control" id="height_mm" name="height_mm" required>
             </div>
             <div class="mb-3">
                 <label for="identifier" class="form-label">Matrix Identifier:</label>
@@ -27,8 +27,8 @@
                 <input type="text" class="form-control" id="name" name="name" required>
             </div>
             <div class="mb-3">
-                <label for="weight_unit_grs" class="form-label">Weight per Unit (grs):</label>
-                <input type="number" step="0.01" class="form-control" id="weight_unit_grs" name="weight_unit_grs" required>
+                <label for="weight_total_grs" class="form-label">Weight Total (grs):</label>
+                <input type="number" class="form-control" id="weight_total_grs" name="weight_total_grs">
             </div>
             <div class="form-check mb-3">
                 <input type="checkbox" class="form-check-input" id="with_move" name="with_move">
@@ -82,10 +82,6 @@
             for (let i = 1; i <= numberOfCavities; i++) {
                 cavityDetailsDiv.innerHTML += `
                     <h3>Cavity ${i}</h3>
-                    <div class="mb-3">
-                        <label for="cavity_name_${i}" class="form-label">Cavity Name:</label>
-                        <input type="text" class="form-control" id="cavity_name_${i}" name="cavity_name_${i}">
-                    </div>
                     <div class="mb-3">
                         <label for="piece_name_${i}" class="form-label">Piece Name:</label>
                         <input type="text" class="form-control" id="piece_name_${i}" name="piece_name_${i}">

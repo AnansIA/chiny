@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Machine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Add Machine</h1>
+        <form method="POST" action="{{ url_for('add_machine') }}">
+            <div class="mb-3">
+                <label for="brand_machine" class="form-label">Brand:</label>
+                <input type="text" class="form-control" id="brand_machine" name="brand_machine" required>
+            </div>
+            <div class="mb-3">
+                <label for="ton" class="form-label">Tonnage:</label>
+                <input type="number" class="form-control" id="ton" name="ton" required>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Name Machine:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_close_cycle" name="has_close_cycle">
+                <label class="form-check-label" for="has_close_cycle">Has Close Cycle</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_injection_time" name="has_injection_time">
+                <label class="form-check-label" for="has_injection_time">Has Injection Time</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_curing_time" name="has_curing_time">
+                <label class="form-check-label" for="has_curing_time">Has Curing Time</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_waiting_time" name="has_waiting_time">
+                <label class="form-check-label" for="has_waiting_time">Has Waiting Time</label>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Add Machine">
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

@@ -8,6 +8,9 @@ SHAPES = [
     'Polygonal', 'Irregular', 'Custom'
 ]
 
+# Matrix and Holders
+# ------------------
+
 
 class Piece(db.Model):
     __tablename__ = 'piece'
@@ -41,9 +44,9 @@ class Matrix(db.Model):
                                   db.ForeignKey('measuresmatrix.id'),
                                   nullable=False)
     name = db.Column(db.String(120), nullable=False)
-    weight_unit_grs = db.Column(db.Float, nullable=False)
     with_move = db.Column(db.Boolean, default=False)
     is_combinable = db.Column(db.Boolean, default=True)
+    weight_total_grs = db.Column(db.Float, default=0)
     cavities = db.relationship('Cavity', backref='matrix', lazy=True)
 
 
@@ -53,7 +56,6 @@ class Cavity(db.Model):
     matrix_id = db.Column(db.Integer,
                           db.ForeignKey('matrix.id'),
                           nullable=False)
-    name = db.Column(db.String(120), nullable=False)
     piece_id = db.Column(db.Integer,
                          db.ForeignKey('piece.id'),
                          nullable=False)
@@ -70,8 +72,52 @@ class Holder(db.Model):
     available = db.Column(db.Boolean, default=True)
 
 
+# Var Variables
+# --------------
+
+class Person(db.Model):
+    __tablename__ = 'person'
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(120))
+    last_name = db.Column(db.String(120))
+    observ = db.Column(db.String(250))
+
+
+# Machines
+# --------
+
+
 class Machine(db.Model):
     __tablename__ = 'machine'
     id = db.Column(db.Integer, primary_key=True)
-    brand_machine = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(30), unique=True)
+    brand_machine = db.Column(db.String(119), nullable=False)
     ton = db.Column(db.Integer, nullable=False)
+    has_close_cycle = db.Column(db.Boolean, default=False)
+    has_injection_time = db.Column(db.Boolean, default=False)
+    has_curing_time = db.Column(db.Boolean, default=False)
+    has_waiting_time = db.Column(db.Boolean, default=False)
+    productions = db.relationship('Production', backref='machine', lazy=True)
+
+
+# Actions
+# -------
+
+class Production(db.Model):
+    __tablename__ = 'production'
+    id = db.Column(db.Integer, primary_key=True)
+    matrix_id = db.Column(db.Integer,
+                          db.ForeignKey('matrix.id'),
+                          nullable=False)
+    holder_id = db.Column(db.Integer,
+                          db.ForeignKey('holder.id'),
+                          nullable=False)
+    machine_id = db.Column(db.Integer,
+                           db.ForeignKey('machine.id'),
+                           nullable=False)
+    close_cycle = db.Column(db.Float, nullable=True)
+    injection_time = db.Column(db.Float, nullable=True)
+    curing_time = db.Column(db.Float, nullable=True)
+    waiting_time = db.Column(db.Float, nullable=True)
+    production_date = db.Column(db.Date, nullable=False)
+    quantity_produced = db.Column(db.Integer, nullable=True)
