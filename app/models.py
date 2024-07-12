@@ -78,8 +78,7 @@ class Holder(db.Model):
 class Person(db.Model):
     __tablename__ = 'person'
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(120))
-    last_name = db.Column(db.String(120))
+    fullname = db.Column(db.String(120), nullable=False)
     observ = db.Column(db.String(250))
 
 

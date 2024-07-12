@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for
-from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, SHAPES
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, SHAPES
 from flask import current_app as app
 
 
@@ -124,3 +124,17 @@ def add_machine():
         db.session.commit()
         return redirect(url_for('list_machines'))
     return render_template('add_machine.html')
+
+
+
+@app.route('/create_person', methods=['POST'])
+def create_person():
+    fullname = request.form.get('fullname')
+    observ = request.form.get('observ')
+
+    if fullname:
+        person = Person(fullname=fullname, observ=observ)
+        db.session.add(person)
+        db.session.commit()
+        return jsonify({'message': 'Person created successfully'}), 201
+    return jsonify({'error': 'Invalid input'}), 400
