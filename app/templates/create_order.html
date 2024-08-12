@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Order</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Create Order</h1>
+        <form method="POST" action="{{ url_for('create_order') }}">
+            <div class="mb-3">
+                <label for="product" class="form-label">Product:</label>
+                <input type="text" class="form-control" id="product" name="product" required>
+            </div>
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity:</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" required>
+            </div>
+            <div class="mb-3">
+                <label for="client" class="form-label">Client:</label>
+                <input type="text" class="form-control" id="client" name="client" required>
+            </div>
+            <div class="mb-3">
+                <label for="delivery_date" class="form-label">Delivery Date:</label>
+                <input type="date" class="form-control" id="delivery_date" name="delivery_date" required>
+            </div>
+            <div class="mb-3">
+                <label for="priority" class="form-label">Priority:</label>
+                <select class="form-select" id="priority" name="priority">
+                    <option value="High">High</option>
+                    <option value="Normal" selected>Normal</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="matrix_identifier" class="form-label">Matrix Identifier:</label>
+                <select class="form-select" id="matrix_identifier" name="matrix_identifier" required>
+                    {% for matrix in matrices %}
+                        <option value="{{ matrix.identifier }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="observation" class="form-label">Observation:</label>
+                <textarea class="form-control" id="observation" name="observation"></textarea>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Create Order">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

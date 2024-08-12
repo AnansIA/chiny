@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 </head>
 <body>
+	
+    {% include 'navbar.html' %}
+
     <div class="container">
         <h1 class="mt-5">Create Matrix</h1>
         <form method="POST" action="{{ url_for('create_matrix') }}">
@@ -26,6 +29,14 @@
                 <label for="name" class="form-label">Matrix Name:</label>
                 <input type="text" class="form-control" id="name" name="name" required>
             </div>
+	    <div class="mb-3">
+    		<label for="type_matrix" class="form-label">Type of Matrix:</label>
+    		<select class="form-select" id="type_matrix" name="type_matrix" required>
+        		<option value="1">1</option>
+        		<option value="2">2</option>
+        		<option value="4" selected>4</option> <!-- Por defecto, el valor es 4 -->
+    		</select>
+	   </div>
             <div class="mb-3">
                 <label for="weight_total_grs" class="form-label">Weight Total (grs):</label>
                 <input type="number" class="form-control" id="weight_total_grs" name="weight_total_grs">

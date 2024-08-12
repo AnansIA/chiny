@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Association</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Create Association between Matrix and Holder</h1>
+        <form method="POST" action="{{ url_for('create_association') }}">
+            <div class="mb-3">
+                <label for="matrix_id" class="form-label">Select Matrix:</label>
+                <select class="form-select" id="matrix_id" name="matrix_id" required>
+                    {% for matrix in matrices %}
+                        <option value="{{ matrix.id }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="holder_id" class="form-label">Select Holder:</label>
+                <select class="form-select" id="holder_id" name="holder_id" required>
+                    {% for holder in holders %}
+                        <option value="{{ holder.id }}">{{ holder.identifier }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Create Association">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Machine</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Edit Machine</h1>
+        <form method="POST" action="{{ url_for('edit_machine', machine_id=machine.id) }}">
+            <div class="mb-3">
+                <label for="name" class="form-label">Machine Name:</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ machine.name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="brand_machine" class="form-label">Brand:</label>
+                <input type="text" class="form-control" id="brand_machine" name="brand_machine" value="{{ machine.brand_machine }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="ton" class="form-label">Tonnage (Ton):</label>
+                <input type="number" class="form-control" id="ton" name="ton" value="{{ machine.ton }}" required>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_close_cycle" name="has_close_cycle" {% if machine.has_close_cycle %}checked{% endif %}>
+                <label class="form-check-label" for="has_close_cycle">Has Close Cycle</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_injection_time" name="has_injection_time" {% if machine.has_injection_time %}checked{% endif %}>
+                <label class="form-check-label" for="has_injection_time">Has Injection Time</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_curing_time" name="has_curing_time" {% if machine.has_curing_time %}checked{% endif %}>
+                <label class="form-check-label" for="has_curing_time">Has Curing Time</label>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="has_waiting_time" name="has_waiting_time" {% if machine.has_waiting_time %}checked{% endif %}>
+                <label class="form-check-label" for="has_waiting_time">Has Waiting Time</label>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Save Changes">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

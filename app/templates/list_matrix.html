@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 </head>
 <body>
+
+    {% include 'navbar.html' %}
+
     <div class="container">
         <h1 class="mt-5">List of Matrices</h1>
         <div class="accordion" id="matrixAccordion">
@@ -19,6 +22,7 @@
                     </h2>
                     <div id="collapse{{ matrix.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ matrix.id }}">
                         <div class="accordion-body">
+			    <strong><a href="{{ url_for('edit_matrix', matrix_id=matrix.id) }}"><--Editar--></a></strong>
                             <p><strong>Dimensions:</strong> {{ matrix.width_mm }} mm x {{ matrix.height_mm }} mm</p>
                             <p><strong>With Move:</strong> {{ 'Yes' if matrix.with_move else 'No' }}</p>
                             <p><strong>Is Combinable:</strong> {{ 'Yes' if matrix.is_combinable else 'No' }}</p>

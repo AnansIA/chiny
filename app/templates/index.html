@@ -8,25 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Chiny</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('create_matrix') }}">Create Matrix</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#createPersonModal">Create Person</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+
+    {% include 'navbar.html' %}
 
     <div class="container mt-5">
     </div>
@@ -62,7 +45,6 @@
     <script>
         document.getElementById('createPersonForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            console.log('Form submitted'); // Debugging line
             const fullname = document.getElementById('fullname').value;
             const observ = document.getElementById('observ').value;
 
@@ -75,15 +57,12 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Response received'); // Debugging line
                 if (data.message) {
-                    console.log('Success:', data.message); // Debugging line
                     alert(data.message);
                     var createPersonModal = new bootstrap.Modal(document.getElementById('createPersonModal'));
                     createPersonModal.hide();
                     document.getElementById('createPersonForm').reset();
                 } else {
-                    console.log('Error:', data.error); // Debugging line
                     alert(data.error);
                 }
             })

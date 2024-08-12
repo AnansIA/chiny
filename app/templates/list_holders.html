@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>List Holders</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Holders List</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Identifier</th>
+                    <th>Width (cm)</th>
+                    <th>Height (cm)</th>
+                    <th>Max Weight (grs)</th>
+                    <th>Number of Spaces</th>
+                    <th>With Move</th>
+                    <th>Available</th>
+		    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holder in holders %}
+                <tr>
+                    <td>{{ holder.identifier }}</td>
+                    <td>{{ holder.width_cm }}</td>
+                    <td>{{ holder.height_cm }}</td>
+                    <td>{{ holder.max_weight_grs }}</td>
+                    <td>{{ holder.num_spaces }}</td>
+                    <td>{{ 'Yes' if holder.with_move else 'No' }}</td>
+                    <td>{{ 'Yes' if holder.available else 'No' }}</td>
+		    <td><a href="{{ url_for('edit_holder', holder_id=holder.id) }}">Edit</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

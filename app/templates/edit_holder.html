@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Holder</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Edit Holder</h1>
+        <form method="POST" action="{{ url_for('edit_holder', holder_id=holder.id) }}">
+            <div class="mb-3">
+                <label for="identifier" class="form-label">Holder Identifier:</label>
+                <input type="text" class="form-control" id="identifier" name="identifier" value="{{ holder.identifier }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="width_cm" class="form-label">Width (cm):</label>
+                <input type="number" class="form-control" id="width_cm" name="width_cm" value="{{ holder.width_cm }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="height_cm" class="form-label">Height (cm):</label>
+                <input type="number" class="form-control" id="height_cm" name="height_cm" value="{{ holder.height_cm }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="max_weight_grs" class="form-label">Max Weight (grs):</label>
+                <input type="number" class="form-control" id="max_weight_grs" name="max_weight_grs" value="{{ holder.max_weight_grs }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="num_spaces" class="form-label">Number of Spaces:</label>
+                <input type="number" class="form-control" id="num_spaces" name="num_spaces" value="{{ holder.num_spaces }}" required>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="with_move" name="with_move" {% if holder.with_move %}checked{% endif %}>
+                <label class="form-check-label" for="with_move">With Move</label>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Save Changes">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+

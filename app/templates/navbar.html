@@ -1,0 +1,74 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Chiny</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+            </li>
+            <!-- Matrix Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarMatrixDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Matrix
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarMatrixDropdown">
+                    <li><a class="dropdown-item" href="{{ url_for('create_matrix') }}">Create Matrix</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('list_matrix') }}">List Matrices</a></li>
+                </ul>
+            </li>
+            <!-- Holder Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarHolderDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Holder
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarHolderDropdown">
+                    <li><a class="dropdown-item" href="{{ url_for('create_holder') }}">Create Holder</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('list_holders') }}">List Holders</a></li>
+                </ul>
+            </li>
+	    <!-- Machines Dropdown -->
+	    <li class="nav-item dropdown">
+		<a class="nav-link dropdown-toggle" href="#" id="navbarMachineDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        		Machines
+   		 </a>
+    		<ul class="dropdown-menu" aria-labelledby="navbarMachineDropdown">
+        		<li><a class="dropdown-item" href="{{ url_for('create_machine') }}">Create Machine</a></li>
+        		<li><a class="dropdown-item" href="{{ url_for('list_machines') }}">List Machines</a></li>
+    		</ul>
+	   </li>
+            <!-- Variables Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarVariablesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Variables
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarVariablesDropdown">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#createPersonModal">Create Person</a></li>
+		    <li><a class="dropdown-item" href="{{ url_for('list_persons') }}">List Persons</a></li> <!-- Nuevo enlace -->
+                </ul>
+            </li>
+	    <!-- Armed -->
+	    <li class="nav-item dropdown">
+		    <a class="nav-link dropdown-toggle" href="#" id="navbarArmedDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+			    Armed
+		    </a>
+		<ul class="dropdown-menu" aria-labelledby="navbarArmedDropdown">
+			<li><a class="dropdown-item" href="{{ url_for('create_association') }}">Associate Matrix with Holder</a></li> <!-- Nuevo enlace -->
+       			<li><a class="dropdown-item" href="{{ url_for('list_associations') }}">List Associations</a></li> <!-- Nuevo enlace -->
+		</ul>
+	    </li>
+	   <!-- Orders -->
+	    <li class="nav-item dropdown">
+		<a class="nav-link dropdown-toggle" href="#" id="navbarOrderDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        		Orders
+   		</a>
+    	      <ul class="dropdown-menu" aria-labelledby="navbarOrderDropdown">
+        		<li><a class="dropdown-item" href="{{ url_for('create_order') }}">Create Order</a></li>
+        		<li><a class="dropdown-item" href="{{ url_for('list_orders') }}">List Orders</a></li>
+   		 </ul>
+	     </li>
+        </ul>
+    </div>
+</nav>
+
