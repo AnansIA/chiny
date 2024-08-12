@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, SHAPES
+from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, SHAPES, Holder, MatrixHolderAssociation, Order
 from flask import current_app as app
+from datetime import datetime
 
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/create_matrix', methods=['GET', 'POST'])
 def create_matrix():
@@ -18,6 +18,7 @@ def create_matrix():
         weight_total_grs = request.form.get('weight_total_grs')
         with_move = 'with_move' in request.form
         is_combinable = 'is_combinable' in request.form
+        type_matrix = int(request.form.get('type_matrix'))  # Nuevo campo
         cavities_count = int(request.form.get('cavities'))
 
         measures_matrix = MeasuresMatrix(width_mm=width_mm,
@@ -31,7 +32,8 @@ def create_matrix():
             name=name,
             with_move=with_move,
             weight_total_grs=weight_total_grs,
-            is_combinable=is_combinable
+            is_combinable=is_combinable,
+            type_matrix=type_matrix
         )
         db.session.add(matrix)
         db.session.commit()
@@ -69,7 +71,7 @@ def create_matrix():
                     db.session.add(cavity)
                     db.session.commit()
 
-        return redirect(url_for('create_matrix'))
+        return redirect(url_for('list_matrix'))
 
     return render_template('create_matrix.html', shapes=SHAPES)
 
@@ -90,6 +92,7 @@ def list_matrix():
                 'piece_shape': piece.shape
             })
         matrices_data.append({
+            'id': matrix.id,
             'identifier': matrix.identifier,
             'name': matrix.name,
             'with_move': matrix.with_move,
@@ -125,7 +128,31 @@ def add_machine():
         return redirect(url_for('list_machines'))
     return render_template('add_machine.html')
 
+@app.route('/list_holders')
+def list_holders():
+    holders = Holder.query.all()
+    return render_template('list_holders.html', holders=holders)
 
+@app.route('/list_persons')
+def list_persons():
+    persons = Person.query.all()
+    return render_template('list_persons.html', persons=persons)
+
+
+@app.route('/list_associations')
+def list_associations():
+    associations = MatrixHolderAssociation.query.all()
+    return render_template('list_associations.html', associations=associations)
+
+@app.route('/list_machines')
+def list_machines():
+    machines = Machine.query.all()
+    return render_template('list_machines.html', machines=machines)
+
+@app.route('/list_orders')
+def list_orders():
+    orders = Order.query.all()
+    return render_template('list_orders.html', orders=orders)
 
 @app.route('/create_person', methods=['POST'])
 def create_person():
@@ -138,3 +165,199 @@ def create_person():
         db.session.commit()
         return jsonify({'message': 'Person created successfully'}), 201
     return jsonify({'error': 'Invalid input'}), 400
+
+@app.route('/create_holder', methods=['GET', 'POST'])
+def create_holder():
+    if request.method == 'POST':
+        identifier = request.form.get('identifier')
+        width_cm = request.form.get('width_cm')
+        height_cm = request.form.get('height_cm')
+        max_weight_grs = request.form.get('max_weight_grs')
+        num_spaces = request.form.get('num_spaces')
+        with_move = 'with_move' in request.form
+
+        holder = Holder(
+            identifier=identifier,
+            width_cm=width_cm,
+            height_cm=height_cm,
+            max_weight_grs=max_weight_grs,
+            num_spaces=num_spaces,
+            with_move=with_move,
+            available=True  # Se crea disponible por defecto
+        )
+        db.session.add(holder)
+        db.session.commit()
+
+        return redirect(url_for('list_holders'))
+
+    return render_template('create_holder.html')
+
+@app.route('/edit_matrix/<int:matrix_id>', methods=['GET', 'POST'])
+def edit_matrix(matrix_id):
+    matrix = Matrix.query.get_or_404(matrix_id)
+    if request.method == 'POST':
+        matrix.identifier = request.form.get('identifier')
+        matrix.name = request.form.get('name')
+        matrix.weight_total_grs = request.form.get('weight_total_grs')
+        matrix.with_move = 'with_move' in request.form
+        matrix.is_combinable = 'is_combinable' in request.form
+        matrix.type_matrix = int(request.form.get('type_matrix'))  # Nuevo campo
+        db.session.commit()
+
+        return redirect(url_for('list_matrix'))
+
+    return render_template('edit_matrix.html', matrix=matrix)
+
+
+# Ruta para editar portamoldes
+@app.route('/edit_holder/<int:holder_id>', methods=['GET', 'POST'])
+def edit_holder(holder_id):
+    holder = Holder.query.get_or_404(holder_id)
+    if request.method == 'POST':
+        holder.identifier = request.form.get('identifier')
+        holder.width_cm = request.form.get('width_cm')
+        holder.height_cm = request.form.get('height_cm')
+        holder.max_weight_grs = request.form.get('max_weight_grs')
+        holder.num_spaces = request.form.get('num_spaces')
+        holder.with_move = 'with_move' in request.form
+        db.session.commit()
+        return redirect(url_for('list_holders'))
+    return render_template('edit_holder.html', holder=holder)
+
+
+@app.route('/create_association', methods=['GET', 'POST'])
+def create_association():
+    if request.method == 'POST':
+        matrix_id = request.form.get('matrix_id')
+        holder_id = request.form.get('holder_id')
+
+        # Crear la asociación
+        association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
+        db.session.add(association)
+
+        # Marcar la matriz y el portamolde como no disponibles
+        matrix = Matrix.query.get(matrix_id)
+        holder = Holder.query.get(holder_id)
+        matrix.is_available = False
+        holder.available = False  # Usar el campo existente
+
+        db.session.commit()
+
+        return redirect(url_for('list_associations'))
+
+    matrices = Matrix.query.filter_by(is_available=True).all()
+    holders = Holder.query.filter_by(available=True).all()  # Usar el campo existente
+    return render_template('create_association.html', matrices=matrices, holders=holders)
+
+
+@app.route('/disarm_association/<int:association_id>', methods=['POST'])
+def disarm_association(association_id):
+    association = MatrixHolderAssociation.query.get_or_404(association_id)
+
+    # Marcar la matriz y el portamolde como disponibles
+    matrix = Matrix.query.get(association.matrix_id)
+    holder = Holder.query.get(association.holder_id)
+    matrix.is_available = True
+    holder.available = True
+
+    # Eliminar la asociación
+    db.session.delete(association)
+    db.session.commit()
+
+    return redirect(url_for('list_associations'))
+
+
+@app.route('/create_machine', methods=['GET', 'POST'])
+def create_machine():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        brand_machine = request.form.get('brand_machine')
+        ton = request.form.get('ton')
+        has_close_cycle = 'has_close_cycle' in request.form
+        has_injection_time = 'has_injection_time' in request.form
+        has_curing_time = 'has_curing_time' in request.form
+        has_waiting_time = 'has_waiting_time' in request.form
+
+        machine = Machine(
+            name=name,
+            brand_machine=brand_machine,
+            ton=ton,
+            has_close_cycle=has_close_cycle,
+            has_injection_time=has_injection_time,
+            has_curing_time=has_curing_time,
+            has_waiting_time=has_waiting_time
+        )
+        db.session.add(machine)
+        db.session.commit()
+
+        return redirect(url_for('list_machines'))
+
+    return render_template('create_machine.html')
+
+
+@app.route('/edit_machine/<int:machine_id>', methods=['GET', 'POST'])
+def edit_machine(machine_id):
+    machine = Machine.query.get_or_404(machine_id)
+    if request.method == 'POST':
+        machine.name = request.form.get('name')
+        machine.brand_machine = request.form.get('brand_machine')
+        machine.ton = request.form.get('ton')
+        machine.has_close_cycle = 'has_close_cycle' in request.form
+        machine.has_injection_time = 'has_injection_time' in request.form
+        machine.has_curing_time = 'has_curing_time' in request.form
+        machine.has_waiting_time = 'has_waiting_time' in request.form
+
+        db.session.commit()
+        return redirect(url_for('list_machines'))
+
+    return render_template('edit_machine.html', machine=machine)
+
+@app.route('/create_order', methods=['GET', 'POST'])
+def create_order():
+    if request.method == 'POST':
+        product = request.form.get('product')
+        quantity = request.form.get('quantity')
+        client = request.form.get('client')
+        delivery_date_str = request.form.get('delivery_date')
+        delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d').date()  # Convertir a objeto date
+        priority = request.form.get('priority')
+        matrix_identifier = request.form.get('matrix_identifier')
+        observation = request.form.get('observation')
+
+        order = Order(
+            product=product,
+            quantity=quantity,
+            client=client,
+            delivery_date=delivery_date,
+            priority=priority,
+            matrix_identifier=matrix_identifier,
+            observation=observation
+        )
+        db.session.add(order)
+        db.session.commit()
+
+        return redirect(url_for('list_orders'))
+
+    matrices = Matrix.query.all()
+    return render_template('create_order.html', matrices=matrices)
+
+
+@app.route('/edit_order/<int:order_id>', methods=['GET', 'POST'])
+def edit_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if request.method == 'POST':
+        order.product = request.form.get('product')
+        order.quantity = request.form.get('quantity')
+        order.client = request.form.get('client')
+        delivery_date_str = request.form.get('delivery_date')
+        order.delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d').date()
+        order.priority = request.form.get('priority')
+        order.matrix_identifier = request.form.get('matrix_identifier')
+        order.observation = request.form.get('observation')
+
+        db.session.commit()
+        return redirect(url_for('list_orders'))
+
+    matrices = Matrix.query.all()
+    return render_template('edit_order.html', order=order, matrices=matrices)
+
