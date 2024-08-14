@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>List of Productions</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>List of Productions</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Machine</th>
+                    <th>Product</th>
+                    <th>Person</th>
+                    <th>Space</th>
+                    <th>Action</th>
+                    <th>Golpes</th>
+                    <th>Time</th>
+                    <th>Cavities</th>
+                    <th>Piece Weight (grs)</th>
+                    <th>Total Pieces</th>
+                    <th>Total Kilos</th>
+                    <th>Identifier</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for production in productions %}
+                <tr>
+                    <td>{{ production.order.id }}</td>
+                    <td>{{ production.production_date }}</td>
+                    <td>{{ production.machine.name }}</td>
+                    <td>{{ production.order.product }}</td>
+                    <td>{{ production.person.fullname }}</td>
+                    <td>{{ production.holder.identifier }}</td>
+                    <td>{{ production.action }}</td>
+                    <td>{{ production.golpes }}</td>
+                    <td>{{ production.action_time }}</td>
+                    <td>{{ production.active_cavities }}</td>
+                    <td>{{ production.piece_weight_grs }}</td>
+                    <td>{{ production.total_pieces }}</td>
+                    <td>{{ production.total_weight_kilos }}</td>
+                    <td>{{ production.identifier }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

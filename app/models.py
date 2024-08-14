@@ -1,4 +1,6 @@
 from . import db
+from datetime import datetime
+
 
 SHAPES = [
     'Circular', 'Rectangular', 'Square', 'Oval', 'Triangular', 'Hexagonal',
@@ -111,7 +113,6 @@ class Order(db.Model):
 # Machines
 # --------
 
-
 class Machine(db.Model):
     __tablename__ = 'machine'
     id = db.Column(db.Integer, primary_key=True)
@@ -122,31 +123,39 @@ class Machine(db.Model):
     has_injection_time = db.Column(db.Boolean, default=False)
     has_curing_time = db.Column(db.Boolean, default=False)
     has_waiting_time = db.Column(db.Boolean, default=False)
-    productions = db.relationship('Production', backref='machine', lazy=True)
+    productions = db.relationship('Production', backref='machine', lazy=True)  # backref 'machine'
 
 
 # Actions
 # -------
 
+class ProductionOrder(db.Model):
+    __tablename__ = 'production_order'
+    id = db.Column(db.Integer, primary_key=True)
+    production_id = db.Column(db.Integer, db.ForeignKey('production.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+
+    production = db.relationship('Production', backref='production_orders')
+    order = db.relationship('Order', backref='production_orders')
+
 class Production(db.Model):
     __tablename__ = 'production'
     id = db.Column(db.Integer, primary_key=True)
-    holder_id = db.Column(db.Integer,
-                          db.ForeignKey('holder.id'),
-                          nullable=False)
-    machine_id = db.Column(db.Integer,
-                           db.ForeignKey('machine.id'),
-                           nullable=False)
-    person_id = db.Column(db.Integer,
-                          db.ForeignKey('person.id'),
-                          nullable=False)
-    close_cycle = db.Column(db.Float, nullable=True)
-    injection_time = db.Column(db.Float, nullable=True)
-    curing_time = db.Column(db.Float, nullable=True)
-    waiting_time = db.Column(db.Float, nullable=True)
+    holder_id = db.Column(db.Integer, db.ForeignKey('holder.id'), nullable=False)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machine.id'), nullable=False)
+    person_id = db.Column(db.Integer, db.ForeignKey('person.id'), nullable=False)
+    matrix_id = db.Column(db.Integer, db.ForeignKey('matrix.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)
+    injection_qty = db.Column(db.Integer, nullable=False)
+    action_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    total_pieces = db.Column(db.Integer, nullable=False)
+    total_weight_kilos = db.Column(db.Float, nullable=False)
+    identifier = db.Column(db.String(20), nullable=False, unique=True)
     production_date = db.Column(db.Date, nullable=False)
-    quantity_produced = db.Column(db.Integer, nullable=True)
 
+    holder = db.relationship('Holder', backref='productions')
+    person = db.relationship('Person', backref='productions')
+    matrix = db.relationship('Matrix', backref='productions')
 
 class MatrixHolderAssociation(db.Model):
     __tablename__ = 'matrix_holder_association'
@@ -154,6 +163,16 @@ class MatrixHolderAssociation(db.Model):
     matrix_id = db.Column(db.Integer, db.ForeignKey('matrix.id'), nullable=False)
     holder_id = db.Column(db.Integer, db.ForeignKey('holder.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True)  # Indica si la asociación está activa
-    
+
     matrix = db.relationship('Matrix', backref=db.backref('associations', cascade="all, delete-orphan"))
     holder = db.relationship('Holder', backref=db.backref('associations', cascade="all, delete-orphan"))
+
+
+class ProductionParameters(db.Model):
+    __tablename__ = 'production_parameters'
+    id = db.Column(db.Integer, primary_key=True)
+    production_id = db.Column(db.Integer, db.ForeignKey('production.id'), nullable=False)
+    parameter_name = db.Column(db.String(50), nullable=False)
+    parameter_value = db.Column(db.Float, nullable=False)
+
+    production = db.relationship('Production', backref='parameters')

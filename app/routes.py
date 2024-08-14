@@ -154,6 +154,11 @@ def list_orders():
     orders = Order.query.all()
     return render_template('list_orders.html', orders=orders)
 
+@app.route('/list_productions')
+def list_productions():
+    productions = Production.query.all()
+    return render_template('list_productions.html', productions=productions)
+
 @app.route('/create_person', methods=['POST'])
 def create_person():
     fullname = request.form.get('fullname')
@@ -359,5 +364,94 @@ def edit_order(order_id):
         return redirect(url_for('list_orders'))
 
     matrices = Matrix.query.all()
-    return render_template('edit_order.html', order=order, matrices=matrices)
+
+@app.route('/create_production', methods=['GET', 'POST'])
+def create_production():
+    if request.method == 'POST':
+        order_ids = request.form.getlist('order_ids')
+        matrix_id = request.form.get('matrix_id')
+        holder_id = request.form.get('holder_id')
+        machine_id = request.form.get('machine_id')
+        person_id = request.form.get('person_id')
+        action = request.form.get('action')
+        injection_qty = int(request.form.get('injection_qty'))
+
+        matrix = Matrix.query.get(matrix_id)
+        active_cavities = matrix.cavities_count  # Obtén el número de cavidades activas desde la configuración de la matriz
+        piece_weight_grs = matrix.piece_weight_grs  # Obtén el peso de la pieza desde la configuración de la matriz
+
+        total_pieces = injection_qty * active_cavities
+        total_weight_kilos = (total_pieces * piece_weight_grs) / 1000  # Convertir a kilos
+
+        identifier = f"{datetime.now().strftime('%Y%m%d')}-{order_ids[0]}"  # Usamos el primer pedido como referencia para el identificador
+
+        production = Production(
+            matrix_id=matrix_id,
+            holder_id=holder_id,
+            machine_id=machine_id,
+            person_id=person_id,
+            action=action,
+            injection_qty=injection_qty,
+            action_time=datetime.utcnow(),
+            total_pieces=total_pieces,
+            total_weight_kilos=total_weight_kilos,
+            identifier=identifier,
+            production_date=datetime.utcnow().date()
+        )
+        db.session.add(production)
+        db.session.commit()
+
+        for order_id in order_ids:
+            production_order = ProductionOrder(
+                production_id=production.id,
+                order_id=order_id
+            )
+            db.session.add(production_order)
+        
+        db.session.commit()
+
+        return redirect(url_for('list_productions'))
+
+    orders = Order.query.all()
+    matrices = Matrix.query.all()
+    holders = Holder.query.all()
+    machines = Machine.query.all()
+    persons = Person.query.all()
+
+    return render_template('create_production.html', orders=orders, matrices=matrices, holders=holders, machines=machines, persons=persons)
+
+@app.route('/edit_holder_matrices/<int:holder_id>', methods=['GET', 'POST'])
+def edit_holder_matrices(holder_id):
+    holder = Holder.query.get_or_404(holder_id)
+
+    if request.method == 'POST':
+        matrix_id = request.form.get('matrix_id')
+        existing_association = MatrixHolderAssociation.query.filter_by(matrix_id=matrix_id, holder_id=holder_id).first()
+
+        if existing_association:
+            existing_association.is_active = True
+        else:
+            new_association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
+            db.session.add(new_association)
+
+        db.session.commit()
+        return redirect(url_for('edit_holder_matrices', holder_id=holder_id))
+
+    available_matrices = Matrix.query.filter(~Matrix.associations.any(holder_id=holder_id)).all()
+    return render_template('edit_holder_matrices.html', holder=holder, available_matrices=available_matrices)
+
+@app.route('/remove_matrix_from_holder/<int:association_id>', methods=['POST'])
+def remove_matrix_from_holder(association_id):
+    association = MatrixHolderAssociation.query.get_or_404(association_id)
+    association.is_active = False
+    db.session.commit()
+    return redirect(url_for('edit_holder_matrices', holder_id=association.holder_id))
+
+
+@app.route('/reactivate_matrix_in_holder/<int:association_id>', methods=['POST'])
+def reactivate_matrix_in_holder(association_id):
+    association = MatrixHolderAssociation.query.get_or_404(association_id)
+    association.is_active = True
+    db.session.commit()
+    return redirect(url_for('edit_holder_matrices', holder_id=association.holder_id))
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Production Record</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Create Production Record</h1>
+        <form method="POST" action="{{ url_for('create_production') }}">
+            <div class="mb-3">
+                <label for="order_ids" class="form-label">Select Orders:</label>
+                <select class="form-select" id="order_ids" name="order_ids" multiple required>
+                    {% for order in orders %}
+                        <option value="{{ order.id }}">{{ order.product }} - {{ order.client }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="matrix_id" class="form-label">Select Matrix:</label>
+                <select class="form-select" id="matrix_id" name="matrix_id" required>
+                    {% for matrix in matrices %}
+                        <option value="{{ matrix.id }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="holder_id" class="form-label">Select Holder:</label>
+                <select class="form-select" id="holder_id" name="holder_id" required>
+                    {% for holder in holders %}
+                        <option value="{{ holder.id }}">{{ holder.identifier }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="machine_id" class="form-label">Select Machine:</label>
+                <select class="form-select" id="machine_id" name="machine_id" required>
+                    {% for machine in machines %}
+                        <option value="{{ machine.id }}">{{ machine.name }} - {{ machine.brand_machine }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="person_id" class="form-label">Select Person:</label>
+                <select class="form-select" id="person_id" name="person_id" required>
+                    {% for person in persons %}
+                        <option value="{{ person.id }}">{{ person.fullname }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="action" class="form-label">Action:</label>
+                <select class="form-select" id="action" name="action" required>
+                    <option value="Arqueo">Arqueo</option>
+                    <option value="Subida">Subida</option>
+                    <option value="Parada">Parada</option>
+                    <option value="Freno">Freno</option>
+                    <option value="Falla">Falla</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="injection_qty" class="form-label">Injection Quantity:</label>
+                <input type="number" class="form-control" id="injection_qty" name="injection_qty" required>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Create Production">
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
+
