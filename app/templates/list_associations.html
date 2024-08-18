@@ -11,28 +11,37 @@
     {% include 'navbar.html' %}
 
     <div class="container mt-5">
-        <h1>List of Matrix-Holder Associations</h1>
+        <h1>List of Associations</h1>
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Matrix</th>
                     <th>Holder</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th>Matrix Identifier</th>
+                    <th>Matrix Name</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for association in associations %}
-                <tr>
-                    <td>{{ association.matrix.identifier }} - {{ association.matrix.name }}</td>
-                    <td>{{ association.holder.identifier }}</td>
-                    <td>{{ 'Active' if association.is_active else 'Inactive' }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('disarm_association', association_id=association.id) }}" onsubmit="return confirm('Are you sure you want to disarm this association?');">
-                            <button type="submit" class="btn btn-danger">Disarm</button>
-                        </form>
-                    </td>
-                </tr>
+                {% for holder, associations in associations_by_holder.items() %}
+                    <tr>
+                        <td rowspan="{{ associations|length + 1 }}">{{ holder.identifier }}</td>
+                    </tr>
+                    {% for association in associations %}
+                        <tr>
+                            <td>{{ association.matrix.identifier }}</td>
+                            <td>{{ association.matrix.name }}</td>
+                            <td>
+                                <a href="{{ url_for('edit_association', association_id=association.id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                <form method="POST" action="{{ url_for('disarm_association', association_id=association.id) }}" style="display:inline;">
+                                    <input type="submit" class="btn btn-danger btn-sm" value="Remove">
+                                </form>
+				<form method="POST" action="{{ url_for('disarm_holder', holder_id=holder.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to disarm this holder?');">
+					<input type="submit" class="btn btn-danger btn-sm" value="Disarm Holder">
+				</form>
+                            </td>
+
+                        </tr>
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>

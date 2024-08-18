@@ -22,7 +22,8 @@
                     <th>Number of Spaces</th>
                     <th>With Move</th>
                     <th>Available</th>
-		    <th>Edit</th>
+                    <th>Edit</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,7 +36,14 @@
                     <td>{{ holder.num_spaces }}</td>
                     <td>{{ 'Yes' if holder.with_move else 'No' }}</td>
                     <td>{{ 'Yes' if holder.available else 'No' }}</td>
-		    <td><a href="{{ url_for('edit_holder', holder_id=holder.id) }}">Edit</a></td>
+                    <td><a href="{{ url_for('edit_holder', holder_id=holder.id) }}">Edit</a></td>
+                    <td>
+                        {% if holder.associations|length == 0 %}
+                            <form method="POST" action="{{ url_for('set_holder_available', holder_id=holder.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-success btn-sm">Set Available</button>
+                            </form>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

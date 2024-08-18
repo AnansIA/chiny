@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, SHAPES, Holder, MatrixHolderAssociation, Order
+from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, SHAPES, Holder, MatrixHolderAssociation, Order, Production
 from flask import current_app as app
 from datetime import datetime
 
@@ -138,11 +138,16 @@ def list_persons():
     persons = Person.query.all()
     return render_template('list_persons.html', persons=persons)
 
-
 @app.route('/list_associations')
 def list_associations():
-    associations = MatrixHolderAssociation.query.all()
-    return render_template('list_associations.html', associations=associations)
+    holders = Holder.query.all()
+    associations_by_holder = {}
+
+    for holder in holders:
+        associations_by_holder[holder] = MatrixHolderAssociation.query.filter_by(holder_id=holder.id).all()
+
+    return render_template('list_associations.html', associations_by_holder=associations_by_holder)
+
 
 @app.route('/list_machines')
 def list_machines():
@@ -229,29 +234,30 @@ def edit_holder(holder_id):
         return redirect(url_for('list_holders'))
     return render_template('edit_holder.html', holder=holder)
 
-
 @app.route('/create_association', methods=['GET', 'POST'])
 def create_association():
     if request.method == 'POST':
-        matrix_id = request.form.get('matrix_id')
+        matrix_ids = request.form.getlist('matrix_ids[]')  # Asegúrate de obtener todos los IDs seleccionados
         holder_id = request.form.get('holder_id')
 
-        # Crear la asociación
-        association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
-        db.session.add(association)
+        # Crear asociaciones para todas las matrices seleccionadas
+        for matrix_id in matrix_ids:
+            association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
+            db.session.add(association)
 
-        # Marcar la matriz y el portamolde como no disponibles
-        matrix = Matrix.query.get(matrix_id)
+            # Marcar la matriz como no disponible
+            matrix = Matrix.query.get(matrix_id)
+            matrix.is_available = False
+
+        # Marcar el portamolde como no disponible si es necesario
         holder = Holder.query.get(holder_id)
-        matrix.is_available = False
-        holder.available = False  # Usar el campo existente
+        holder.available = False
 
         db.session.commit()
-
         return redirect(url_for('list_associations'))
 
     matrices = Matrix.query.filter_by(is_available=True).all()
-    holders = Holder.query.filter_by(available=True).all()  # Usar el campo existente
+    holders = Holder.query.filter_by(available=True).all()
     return render_template('create_association.html', matrices=matrices, holders=holders)
 
 
@@ -425,20 +431,41 @@ def edit_holder_matrices(holder_id):
     holder = Holder.query.get_or_404(holder_id)
 
     if request.method == 'POST':
-        matrix_id = request.form.get('matrix_id')
-        existing_association = MatrixHolderAssociation.query.filter_by(matrix_id=matrix_id, holder_id=holder_id).first()
+        # Obtener matrices seleccionadas para agregar
+        new_matrix_ids = request.form.getlist('new_matrix_ids')
+        
+        # Agregar nuevas asociaciones de matrices al portamolde
+        for matrix_id in new_matrix_ids:
+            existing_association = MatrixHolderAssociation.query.filter_by(matrix_id=matrix_id, holder_id=holder_id).first()
+            if not existing_association:
+                new_association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
+                db.session.add(new_association)
+                # Marcar la matriz como no disponible
+                matrix = Matrix.query.get(matrix_id)
+                matrix.is_available = False
 
-        if existing_association:
-            existing_association.is_active = True
-        else:
-            new_association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
-            db.session.add(new_association)
+        # Eliminar matrices deseleccionadas
+        removed_matrix_ids = request.form.getlist('removed_matrix_ids')
+        for matrix_id in removed_matrix_ids:
+            association = MatrixHolderAssociation.query.filter_by(matrix_id=matrix_id, holder_id=holder_id).first()
+            if association:
+                db.session.delete(association)
+                # Marcar la matriz como disponible nuevamente
+                matrix = Matrix.query.get(matrix_id)
+                matrix.is_available = True
 
+        # Actualizar la disponibilidad del portamolde
+        holder.available = not MatrixHolderAssociation.query.filter_by(holder_id=holder_id).count()
+        
         db.session.commit()
-        return redirect(url_for('edit_holder_matrices', holder_id=holder_id))
+        return redirect(url_for('list_associations'))
 
-    available_matrices = Matrix.query.filter(~Matrix.associations.any(holder_id=holder_id)).all()
-    return render_template('edit_holder_matrices.html', holder=holder, available_matrices=available_matrices)
+    # Listar matrices asociadas y disponibles
+    current_matrices = MatrixHolderAssociation.query.filter_by(holder_id=holder.id).all()
+    available_matrices = Matrix.query.filter_by(is_available=True).all()
+
+    return render_template('edit_holder_matrices.html', holder=holder, current_matrices=current_matrices, available_matrices=available_matrices)
+
 
 @app.route('/remove_matrix_from_holder/<int:association_id>', methods=['POST'])
 def remove_matrix_from_holder(association_id):
@@ -455,3 +482,77 @@ def reactivate_matrix_in_holder(association_id):
     db.session.commit()
     return redirect(url_for('edit_holder_matrices', holder_id=association.holder_id))
 
+
+@app.route('/edit_association/<int:association_id>', methods=['GET', 'POST'])
+def edit_association(association_id):
+    association = MatrixHolderAssociation.query.get_or_404(association_id)
+
+    if request.method == 'POST':
+        matrix_id = request.form.get('matrix_id')
+        # Si la matriz seleccionada es diferente, actualizamos la asociación existente
+        if matrix_id != str(association.matrix_id):
+            # Hacemos disponible la matriz anterior
+            previous_matrix = Matrix.query.get(association.matrix_id)
+            previous_matrix.is_available = True
+            
+            # Actualizamos la asociación con la nueva matriz
+            association.matrix_id = matrix_id
+            new_matrix = Matrix.query.get(matrix_id)
+            new_matrix.is_available = False
+            
+        db.session.commit()
+        return redirect(url_for('list_associations'))
+
+    available_matrices = Matrix.query.filter_by(is_available=True).all()
+    return render_template('edit_association.html', association=association, available_matrices=available_matrices)
+
+
+@app.route('/disarm_holder/<int:holder_id>', methods=['POST'])
+def disarm_holder(holder_id):
+    holder = Holder.query.get_or_404(holder_id)
+
+    # Verificar que el portamolde no esté asociado a una producción
+    if Production.query.filter_by(holder_id=holder_id).first():
+        return jsonify({"error": "Holder is currently in production and cannot be disassembled."}), 400
+
+    # Desarmar todas las matrices asociadas y marcarlas como disponibles
+    associations = MatrixHolderAssociation.query.filter_by(holder_id=holder_id).all()
+    for association in associations:
+        matrix = Matrix.query.get(association.matrix_id)
+        matrix.is_available = True
+        db.session.delete(association)
+
+    # Marcar el portamolde como disponible nuevamente
+    holder.available = True
+    db.session.commit()
+    
+    return redirect(url_for('list_associations'))
+
+
+@app.route('/add_matrix_to_holder/<int:holder_id>', methods=['POST'])
+def add_matrix_to_holder(holder_id):
+    matrix_id = request.form.get('new_matrix_id')
+    
+    # Crear nueva asociación
+    new_association = MatrixHolderAssociation(matrix_id=matrix_id, holder_id=holder_id)
+    db.session.add(new_association)
+    
+    # Marcar la matriz como no disponible
+    matrix = Matrix.query.get(matrix_id)
+    matrix.is_available = False
+    
+    db.session.commit()
+    return redirect(url_for('list_associations'))
+
+
+@app.route('/set_holder_available/<int:holder_id>', methods=['POST'])
+def set_holder_available(holder_id):
+    holder = Holder.query.get_or_404(holder_id)
+
+    # Verificar que no tenga matrices asociadas
+    associations = MatrixHolderAssociation.query.filter_by(holder_id=holder_id).count()
+    if associations == 0:
+        holder.available = True
+        db.session.commit()
+    
+    return redirect(url_for('list_holders'))

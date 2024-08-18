@@ -1,49 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Holder Matrices</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-</head>
-<body>
-
-    {% include 'navbar.html' %}
-
-    <div class="container mt-5">
-        <h1>Edit Holder Matrices</h1>
-        <form method="POST" action="{{ url_for('edit_holder_matrices', holder_id=holder.id) }}">
-            <div class="mb-3">
-                <label for="matrix_id" class="form-label">Select Matrix:</label>
-                <select class="form-select" id="matrix_id" name="matrix_id" required>
+<div class="container mt-5">
+    <h1>Edit Holder {{ holder.identifier }}</h1>
+    <form method="POST" action="{{ url_for('edit_holder_matrices', holder_id=holder.id) }}">
+        <div class="list-container">
+            <div>
+                <label for="current_matrices">Current Matrices:</label><br>
+                <select id="current_matrices" name="removed_matrix_ids" multiple>
+                    {% for association in current_matrices %}
+                        <option value="{{ association.matrix.id }}">{{ association.matrix.identifier }} - {{ association.matrix.name }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">Select matrices to remove.</small>
+            </div>
+            <div class="buttons">
+                <button type="button" class="btn btn-primary" onclick="addMatrix()">Add &gt;&gt;</button>
+                <button type="button" class="btn btn-danger" onclick="removeMatrix()">&lt;&lt; Remove</button>
+            </div>
+            <div>
+                <label for="new_matrices">Available Matrices:</label><br>
+                <select id="new_matrices" name="new_matrix_ids" multiple>
                     {% for matrix in available_matrices %}
                         <option value="{{ matrix.id }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
                     {% endfor %}
                 </select>
+                <small class="form-text text-muted">Select matrices to add.</small>
             </div>
-            <input type="submit" class="btn btn-primary" value="Add Matrix">
-        </form>
+        </div>
+        <input type="submit" class="btn btn-primary mt-3" value="Update Associations">
+    </form>
+</div>
 
-        <h2 class="mt-5">Current Matrices in Holder</h2>
-        <ul class="list-group">
-            {% for association in holder.associations %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {{ association.matrix.identifier }} - {{ association.matrix.name }}
-                    {% if association.is_active %}
-                        <form method="POST" action="{{ url_for('remove_matrix_from_holder', association_id=association.id) }}">
-                            <input type="submit" class="btn btn-danger btn-sm" value="Remove">
-                        </form>
-                    {% else %}
-                        <form method="POST" action="{{ url_for('reactivate_matrix_in_holder', association_id=association.id) }}">
-                            <input type="submit" class="btn btn-success btn-sm" value="Reactivate">
-                        </form>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+<script>
+    function addMatrix() {
+        const available = document.getElementById('new_matrices');
+        const selected = document.getElementById('current_matrices');
 
-    <!-- Bootstrap JS -->
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-</body>
-</html>
+        Array.from(available.selectedOptions).forEach(option => {
+            selected.appendChild(option.cloneNode(true));
+            option.remove();
+        });
+    }
+
+    function removeMatrix() {
+        const selected = document.getElementById('current_matrices');
+        const available = document.getElementById('new_matrices');
+
+        Array.from(selected.selectedOptions).forEach(option => {
+            available.appendChild(option.cloneNode(true));
+            option.remove();
+        });
+    }
+</script>
+

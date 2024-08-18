@@ -5,23 +5,54 @@
     <title>Create Association</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        .list-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .list-container select {
+            width: 250px;
+            height: 200px;
+        }
+        .list-container .buttons {
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .list-container .buttons button {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
 
     {% include 'navbar.html' %}
 
     <div class="container mt-5">
-        <h1>Create Association between Matrix and Holder</h1>
+        <h1>Create Association</h1>
         <form method="POST" action="{{ url_for('create_association') }}">
-            <div class="mb-3">
-                <label for="matrix_id" class="form-label">Select Matrix:</label>
-                <select class="form-select" id="matrix_id" name="matrix_id" required>
-                    {% for matrix in matrices %}
-                        <option value="{{ matrix.id }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
-                    {% endfor %}
-                </select>
+            <div class="list-container">
+                <div>
+                    <label for="available_matrices">Available Matrices:</label><br>
+                    <select id="available_matrices" multiple>
+                        {% for matrix in matrices %}
+                            <option value="{{ matrix.id }}">{{ matrix.identifier }} - {{ matrix.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="buttons">
+                    <button type="button" class="btn btn-primary" onclick="addMatrix()">Add &gt;&gt;</button>
+                    <button type="button" class="btn btn-danger" onclick="removeMatrix()">&lt;&lt; Remove</button>
+                </div>
+                <div>
+                    <label for="selected_matrices">Selected Matrices:</label><br>
+                    <!-- Use name="matrix_ids[]" to allow multiple selections -->
+                    <select id="selected_matrices" name="matrix_ids[]" multiple required></select>
+                </div>
             </div>
-            <div class="mb-3">
+            <div class="mt-4">
                 <label for="holder_id" class="form-label">Select Holder:</label>
                 <select class="form-select" id="holder_id" name="holder_id" required>
                     {% for holder in holders %}
@@ -29,9 +60,31 @@
                     {% endfor %}
                 </select>
             </div>
-            <input type="submit" class="btn btn-primary" value="Create Association">
+            <input type="submit" class="btn btn-primary mt-3" value="Create Association">
         </form>
     </div>
+
+    <script>
+        function addMatrix() {
+            const available = document.getElementById('available_matrices');
+            const selected = document.getElementById('selected_matrices');
+
+            Array.from(available.selectedOptions).forEach(option => {
+                selected.appendChild(option.cloneNode(true));
+                option.remove();
+            });
+        }
+
+        function removeMatrix() {
+            const selected = document.getElementById('selected_matrices');
+            const available = document.getElementById('available_matrices');
+
+            Array.from(selected.selectedOptions).forEach(option => {
+                available.appendChild(option.cloneNode(true));
+                option.remove();
+            });
+        }
+    </script>
 
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
