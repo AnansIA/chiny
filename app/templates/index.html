@@ -6,15 +6,85 @@
     <title>Index</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <!-- jQuery (for AJAX requests) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
     {% include 'navbar.html' %}
 
     <div class="container mt-5">
-    </div>
+        <h2>Machine Status</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Machine Name</th>
+                    <th>Current State</th>
+                    <th>Change State</th>
+                    <th>Holder</th>
+                    <th>Close Cycle</th>
+                    <th>Injection Time</th>
+                    <th>Curing Time</th>
+                    <th>Waiting Time</th>
+		    <th>Person</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for machine in machines %}
+                <tr>
+                    <td>{{ machine.name }}</td>
+		        <td id="state-{{ machine.id }}">{{ machine_productions[machine.id].machine_state if machine_productions[machine.id] else 'Not in Production' }}</td>
+                    <td>
+                        <select class="form-select" id="new-state-{{ machine.id }}" {% if not machine.production %}disabled{% endif %}>
+                            <option value="Prendido">Prendido</option>
+                            <option value="Subir Matriz">Subir Matriz</option>
+                            <option value="Bajar Matriz">Bajar Matriz</option>
+                            <option value="Apagado">Apagado</option>
+                            <option value="Interrupción de Producción">Interrupción de Producción</option>
+                        </select>
+                        <button class="btn btn-primary mt-2" onclick="changeState({{ machine.id }})" {% if not machine.production %}disabled{% endif %}>Update State</button>
+                    </td>
+                    <td>
+                        <select class="form-select" id="holder-{{ machine.id }}" {% if machine.production %}disabled{% endif %}>
+                            {% for holder_id, associations in associations_by_holder.items() %}
+                                {% for association in associations %}
+                                    <option value="{{ association.holder.id }}" {% if machine.production and association.holder.id == machine.production.holder_id %}selected{% endif %}>
+                                        {{ association.holder.identifier }}
+                                    </option>
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-success mt-2" onclick="assignHolder({{ machine.id }})" {% if machine.production %}disabled{% endif %}>Assign Holder</button>
+                    </td>
+		    
+		     <td>
+        <input type="number" class="form-control" id="close-cycle-{{ machine.id }}" value="{{ machine_productions[machine.id].close_cycle if machine_productions[machine.id] else '' }}" {% if not machine_productions[machine.id] %}disabled{% endif %}>
+    </td>
+    <td>
+        <input type="number" class="form-control" id="injection-time-{{ machine.id }}" value="{{ machine_productions[machine.id].injection_time if machine_productions[machine.id] else '' }}" {% if not machine_productions[machine.id] %}disabled{% endif %}>
+    </td>
+    <td>
+        <input type="number" class="form-control" id="curing-time-{{ machine.id }}" value="{{ machine_productions[machine.id].curing_time if machine_productions[machine.id] else '' }}" {% if not machine_productions[machine.id] %}disabled{% endif %}>
+    </td>
+    <td>
+        <input type="number" class="form-control" id="waiting-time-{{ machine.id }}" value="{{ machine_productions[machine.id].waiting_time if machine_productions[machine.id] else '' }}" {% if not machine_productions[machine.id] %}disabled{% endif %}>
+    </td>
+    <td>
 
-    <!-- Modal -->
+	    <select id="person_id" name="person_id" class="form-select">
+    <option value="">Select Person</option>
+    {% for person in persons %}
+    <option value="{{ person.id }}">{{ person.fullname }}</option>
+    {% endfor %}
+</select>
+    </td>
+  
+                                  </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  <!-- Modal -->
     <div class="modal fade" id="createPersonModal" tabindex="-1" aria-labelledby="createPersonModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -40,8 +110,41 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        function changeState(machineId) {
+            const newState = $("#new-state-" + machineId).val();
+            $.post("/change_machine_state/" + machineId, {
+                state: newState
+            }, function(data) {
+                alert(data.message);
+                $("#state-" + machineId).text(newState);
+            }).fail(function() {
+                alert("Error updating machine state");
+            });
+        }
+
+        function assignHolder(machineId) {
+            const holderId = $("#holder-" + machineId).val();
+            const personId = $("#person_id").val();  // Captura el valor del person_id
+
+            if (!personId) {
+                alert("Please select a person for the production.");
+                return;
+            }
+
+            $.post("/assign_holder_to_machine/" + machineId, {
+                holder_id: holderId,
+                person_id: personId
+            }, function(data) {
+                alert(data.message);
+                location.reload();  // Reload the page to reflect changes
+            }).fail(function(response) {
+                const errorMessage = response.responseJSON.error || "Error assigning holder";
+                alert(errorMessage);
+            });
+        }
+    </script>
     <script>
         document.getElementById('createPersonForm').addEventListener('submit', function(event) {
             event.preventDefault();

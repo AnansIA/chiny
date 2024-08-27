@@ -138,25 +138,6 @@ class ProductionOrder(db.Model):
     production = db.relationship('Production', backref='production_orders')
     order = db.relationship('Order', backref='production_orders')
 
-class Production(db.Model):
-    __tablename__ = 'production'
-    id = db.Column(db.Integer, primary_key=True)
-    holder_id = db.Column(db.Integer, db.ForeignKey('holder.id'), nullable=False)
-    machine_id = db.Column(db.Integer, db.ForeignKey('machine.id'), nullable=False)
-    person_id = db.Column(db.Integer, db.ForeignKey('person.id'), nullable=False)
-    matrix_id = db.Column(db.Integer, db.ForeignKey('matrix.id'), nullable=False)
-    action = db.Column(db.String(50), nullable=False)
-    injection_qty = db.Column(db.Integer, nullable=False)
-    action_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    total_pieces = db.Column(db.Integer, nullable=False)
-    total_weight_kilos = db.Column(db.Float, nullable=False)
-    identifier = db.Column(db.String(20), nullable=False, unique=True)
-    production_date = db.Column(db.Date, nullable=False)
-
-    holder = db.relationship('Holder', backref='productions')
-    person = db.relationship('Person', backref='productions')
-    matrix = db.relationship('Matrix', backref='productions')
-
 class MatrixHolderAssociation(db.Model):
     __tablename__ = 'matrix_holder_association'
     id = db.Column(db.Integer, primary_key=True)
@@ -176,3 +157,45 @@ class ProductionParameters(db.Model):
     parameter_value = db.Column(db.Float, nullable=False)
 
     production = db.relationship('Production', backref='parameters')
+
+
+# Productions
+# -----------
+
+class MachineState(db.Model):
+    __tablename__ = 'machine_state'
+    id = db.Column(db.Integer, primary_key=True)
+    state_name = db.Column(db.String(50), nullable=False)  # Ej. "Prendido", "Subir Matriz"
+    description = db.Column(db.String(255))
+
+class ProductionArqueo(db.Model):
+    __tablename__ = 'production_arqueo'
+    id = db.Column(db.Integer, primary_key=True)
+    production_id = db.Column(db.Integer, db.ForeignKey('production.id'), nullable=False)
+    arqueo_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    golpes = db.Column(db.Integer, nullable=False)
+
+    production = db.relationship('Production', backref='arqueos')
+
+class Production(db.Model):
+    __tablename__ = 'production'
+    id = db.Column(db.Integer, primary_key=True)
+    holder_id = db.Column(db.Integer, db.ForeignKey('holder.id'), nullable=False)
+    machine_id = db.Column(db.Integer, db.ForeignKey('machine.id'), nullable=False)
+    person_id = db.Column(db.Integer, db.ForeignKey('person.id'), nullable=False)
+    matrix_id = db.Column(db.Integer, db.ForeignKey('matrix.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)
+    injection_qty = db.Column(db.Integer, nullable=False)
+    action_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    total_pieces = db.Column(db.Integer, nullable=False)
+    total_weight_kilos = db.Column(db.Float, nullable=False)
+    identifier = db.Column(db.String(20), nullable=False, unique=True)
+    production_date = db.Column(db.Date, nullable=False)
+    
+    # Nuevos campos
+    machine_state = db.Column(db.String(50), nullable=False, default='Prendido')  # Estado actual de la máquina
+    interruption_reason = db.Column(db.String(255), nullable=True)  # Razón de la interrupción si la máquina se detiene
+
+    holder = db.relationship('Holder', backref='productions')
+    person = db.relationship('Person', backref='productions')
+    matrix = db.relationship('Matrix', backref='productions')

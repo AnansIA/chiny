@@ -3,10 +3,26 @@ from .models import db, MeasuresMatrix, Matrix, Cavity, Piece, Machine, Person, 
 from flask import current_app as app
 from datetime import datetime
 
-
 @app.route('/')
 def index():
-    return render_template('index.html')
+    machines = Machine.query.all()
+    holders = Holder.query.all()
+    persons = Person.query.all()
+
+    # Obtener la producción actual para cada máquina
+    machine_productions = {machine.id: machine.productions[-1] if machine.productions else None for machine in machines}
+
+    associations_by_holder = {}
+    unique_holders = set()  # Mantiene track de los holders únicos
+
+    for holder in holders:
+        associations = MatrixHolderAssociation.query.filter_by(holder_id=holder.id).all()
+        if holder.id not in unique_holders and associations:
+            associations_by_holder[holder.id] = associations
+            unique_holders.add(holder.id)  # Agrega holder a la lista de únicos
+
+    return render_template('index.html', machines=machines, machine_productions=machine_productions, associations_by_holder=associations_by_holder, persons=persons)
+
 
 @app.route('/create_matrix', methods=['GET', 'POST'])
 def create_matrix():
@@ -159,10 +175,14 @@ def list_orders():
     orders = Order.query.all()
     return render_template('list_orders.html', orders=orders)
 
+
+"""
 @app.route('/list_productions')
 def list_productions():
     productions = Production.query.all()
     return render_template('list_productions.html', productions=productions)
+"""
+
 
 @app.route('/create_person', methods=['POST'])
 def create_person():
@@ -370,7 +390,7 @@ def edit_order(order_id):
         return redirect(url_for('list_orders'))
 
     matrices = Matrix.query.all()
-
+"""
 @app.route('/create_production', methods=['GET', 'POST'])
 def create_production():
     if request.method == 'POST':
@@ -425,6 +445,7 @@ def create_production():
     persons = Person.query.all()
 
     return render_template('create_production.html', orders=orders, matrices=matrices, holders=holders, machines=machines, persons=persons)
+"""
 
 @app.route('/edit_holder_matrices/<int:holder_id>', methods=['GET', 'POST'])
 def edit_holder_matrices(holder_id):
@@ -556,3 +577,129 @@ def set_holder_available(holder_id):
         db.session.commit()
     
     return redirect(url_for('list_holders'))
+
+@app.route('/start_production', methods=['POST'])
+def start_production():
+    machine_id = request.form.get('machine_id')
+    person_id = request.form.get('person_id')
+    holder_id = request.form.get('holder_id')
+
+    # Crear una nueva producción con el estado inicial de "Prendido"
+    production = Production(
+        machine_id=machine_id,
+        person_id=person_id,
+        holder_id=holder_id,
+        matrix_id=holder.associations[0].matrix_id,  # Suponiendo que solo hay una matriz activa
+        action='Inicio Producción',
+        injection_qty=0,  # Inicia en 0 golpes
+        total_pieces=0,
+        total_weight_kilos=0.0,
+        identifier=f"{datetime.now().strftime('%Y%m%d')}-{holder_id}",
+        production_date=datetime.utcnow().date(),
+        machine_state='Prendido'
+    )
+    db.session.add(production)
+    db.session.commit()
+
+    return jsonify({'message': 'Producción iniciada correctamente', 'production_id': production.id}), 201
+
+
+@app.route('/update_parameters/<int:production_id>', methods=['POST'])
+def update_parameters(production_id):
+    production = Production.query.get_or_404(production_id)
+    new_golpes = int(request.form.get('golpes'))
+
+    # Registrar el arqueo
+    arqueo = ProductionArqueo(
+        production_id=production_id,
+        golpes=new_golpes
+    )
+    db.session.add(arqueo)
+
+    # Actualizar los parámetros de la máquina
+    # Aquí puedes agregar la lógica para cambiar los parámetros específicos si es necesario
+
+    db.session.commit()
+    return jsonify({'message': 'Parámetros actualizados y arqueo registrado'}), 200
+
+
+@app.route('/stop_production/<int:production_id>', methods=['POST'])
+def stop_production(production_id):
+    production = Production.query.get_or_404(production_id)
+    reason = request.form.get('reason')
+    new_golpes = int(request.form.get('golpes'))
+
+    # Registrar el arqueo antes de parar la producción
+    arqueo = ProductionArqueo(
+        production_id=production_id,
+        golpes=new_golpes
+    )
+    db.session.add(arqueo)
+
+    # Actualizar el estado de la producción y registrar el motivo de la parada
+    production.machine_state = 'Apagado'
+    production.interruption_reason = reason
+
+    db.session.commit()
+    return jsonify({'message': 'Producción detenida y motivo registrado'}), 200
+
+
+@app.route('/assign_holder_to_machine/<int:machine_id>', methods=['POST'])
+def assign_holder_to_machine(machine_id):
+    holder_id = request.form.get('holder_id')
+    person_id = request.form.get('person_id')
+    
+    # Verificar que el person_id no sea None
+    if not person_id:
+        return jsonify({'error': 'Person ID is required'}), 400
+    
+    # Verificar si el portamolde ya está asignado a otra máquina en producción
+    existing_production = Production.query.filter_by(holder_id=holder_id).first()
+    if existing_production:
+        return jsonify({'error': 'Holder is already assigned to another machine'}), 400
+    
+    # Verificar si la máquina ya tiene un portamolde asignado
+    machine_production = Production.query.filter_by(machine_id=machine_id).first()
+    if machine_production:
+        return jsonify({'error': 'Machine is already in production with another holder'}), 400
+    
+    # Obtener todas las matrices asociadas al portamolde
+    associations = MatrixHolderAssociation.query.filter_by(holder_id=holder_id).all()
+    
+    # Crear una entrada de producción por cada matriz asociada
+    for association in associations:
+        production = Production(
+            machine_id=machine_id,
+            holder_id=holder_id,
+            person_id=person_id,
+            matrix_id=association.matrix_id,  # Asignar el matrix_id de la asociación actual
+            action='Inicio Producción',
+            injection_qty=0,  # Inicia en 0 golpes
+            total_pieces=0,
+            total_weight_kilos=0.0,
+            identifier=f"{datetime.now().strftime('%Y%m%d')}-{holder_id}-{association.matrix_id}",
+            production_date=datetime.utcnow().date()
+        )
+        db.session.add(production)
+    
+    db.session.commit()
+
+    return jsonify({'message': 'Holder assigned to machine successfully'}), 201
+
+
+
+@app.route('/change_machine_state/<int:production_id>', methods=['POST'])
+def change_machine_state(production_id):
+    production = Production.query.get_or_404(production_id)
+    new_state = request.form.get('state')
+
+    # Actualizar el estado de la máquina
+    production.machine_state = new_state
+
+    db.session.commit()
+    return jsonify({'message': 'Estado de la máquina actualizado'}), 200
+
+@app.route('/machine_status')
+def machine_status():
+    machines = Machine.query.all()  # Obtener todas las máquinas
+    return render_template('machine_status.html', machines=machines)

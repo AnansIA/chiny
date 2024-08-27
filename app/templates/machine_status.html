@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Machine Status</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <!-- jQuery (for AJAX requests) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1>Machine Status</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Machine Name</th>
+                    <th>Current State</th>
+                    <th>Change State</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for machine in machines %}
+                <tr>
+                    <td>{{ machine.name }}</td>
+                    <td id="state-{{ machine.id }}">{{ machine.production.machine_state if machine.production else 'Not in Production' }}</td>
+                    <td>
+                        <select class="form-select" id="new-state-{{ machine.id }}">
+                            <option value="Prendido">Prendido</option>
+                            <option value="Subir Matriz">Subir Matriz</option>
+                            <option value="Bajar Matriz">Bajar Matriz</option>
+                            <option value="Apagado">Apagado</option>
+                            <option value="Interrupción de Producción">Interrupción de Producción</option>
+                        </select>
+                        <button class="btn btn-primary mt-2" onclick="changeState({{ machine.id }})">Update State</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        function changeState(machineId) {
+            const newState = $("#new-state-" + machineId).val();
+            $.post("/change_machine_state/" + machineId, {
+                state: newState
+            }, function(data) {
+                alert(data.message);
+                $("#state-" + machineId).text(newState);
+            }).fail(function() {
+                alert("Error updating machine state");
+            });
+        }
+    </script>
+</body>
+</html>
+
